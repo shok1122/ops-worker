@@ -1,0 +1,9 @@
+server:
+  host: "example.com"
+  port: 8443
+  tls: true
+  password: "secret-password"
+  timeout: 10
+healthcheck:
+  schedule: "*/5 * * * *"
+checks_file: "/etc/ops-worker/checks.yaml"

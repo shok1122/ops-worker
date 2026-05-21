@@ -1,0 +1,36 @@
+checks:
+  - name: cpu
+    type: cpu
+    schedule: "*/1 * * * *"
+    options: {}
+
+  - name: memory
+    type: memory
+    schedule: "*/1 * * * *"
+    options: {}
+
+  - name: disk-root
+    type: disk
+    schedule: "*/5 * * * *"
+    options:
+      path: "/"
+
+  - name: nginx-process
+    type: process
+    schedule: "*/1 * * * *"
+    options:
+      process_name: "nginx"
+
+  - name: my-app-container
+    type: docker
+    schedule: "*/1 * * * *"
+    options:
+      container_name: "my-app"
+
+  - name: custom-check
+    type: external
+    schedule: "*/5 * * * *"
+    options:
+      command: "/usr/local/bin/my-check.sh"
+      args: []
+      timeout: 10
