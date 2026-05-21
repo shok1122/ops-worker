@@ -14,10 +14,19 @@ ops-worker is a lightweight machine state monitoring agent for Ubuntu, designed 
 ## Installation
 
 ```bash
-git clone https://github.com/owner/ops-worker
-cd ops-worker
-sudo bash install.sh
+curl -fsSL https://raw.githubusercontent.com/shok1122/ops-worker/<tag>/install.sh | sudo bash -s <tag>
 ```
+
+Example:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/shok1122/ops-worker/v1.0.0/install.sh | sudo bash -s v1.0.0
+```
+
+The script will:
+1. Download and install the binary to `/usr/local/bin/ops-worker`
+2. Create `/etc/ops-worker/` with sample config files (if not already present)
+3. Install and start the systemd service
 
 Edit `/etc/ops-worker/config.yaml` and `/etc/ops-worker/checks.yaml` to match your environment.
 
