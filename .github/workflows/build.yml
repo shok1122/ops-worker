@@ -22,6 +22,8 @@ jobs:
             -X ops-worker/version.BuildDate=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
           -o ops-worker .
       - name: Create Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           files: ops-worker
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
