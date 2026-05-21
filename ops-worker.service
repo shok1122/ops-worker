@@ -5,7 +5,7 @@ After=network.target
 [Service]
 Type=simple
 User=root
-ExecStart=/usr/local/bin/ops-worker -config /etc/ops-worker/config.yaml
+ExecStart=/usr/local/bin/ops-worker -service -config /etc/ops-worker/config.yaml
 Restart=always
 RestartSec=5
 StandardOutput=journal
