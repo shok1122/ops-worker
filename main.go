@@ -21,7 +21,8 @@ import (
 func main() {
 	showVersion := flag.Bool("version", false, "print version and exit")
 	service := flag.Bool("service", false, "run as background service (requires config file)")
-	configPath := flag.String("config", "/etc/ops-worker/config.yaml", "path to config file (service mode)")
+	send := flag.Bool("send", false, "run a check once and send result to server (requires config file)")
+	configPath := flag.String("config", "/etc/ops-worker/config.yaml", "path to config file")
 	checksPath := flag.String("checks", "", "path to checks file (service mode, overrides config)")
 	flag.Usage = usage
 	flag.Parse()
@@ -33,6 +34,11 @@ func main() {
 
 	if *service {
 		runService(*configPath, *checksPath)
+		return
+	}
+
+	if *send {
+		runSend(*configPath, flag.Args())
 		return
 	}
 
@@ -87,6 +93,37 @@ func buildOnceChecker(typeName string, args []string) (checker.Checker, error) {
 	default:
 		return nil, fmt.Errorf("unknown check type %q", typeName)
 	}
+}
+
+func runSend(configPath string, args []string) {
+	if len(args) == 0 {
+		fmt.Fprintf(os.Stderr, "error: check type required\n")
+		usage()
+		os.Exit(1)
+	}
+
+	cfg, err := config.Load(configPath)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error: failed to load config: %v\n", err)
+		os.Exit(1)
+	}
+
+	chk, err := buildOnceChecker(args[0], args[1:])
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		os.Exit(1)
+	}
+
+	ctx := context.Background()
+	result := chk.Check(ctx)
+
+	sndr := sender.New(cfg.ReportURL(), cfg.Server.Password, cfg.Server.Timeout)
+	if err := sndr.Send(ctx, result); err != nil {
+		fmt.Fprintf(os.Stderr, "error: failed to send result: %v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Printf("sent: %s (status: %s)\n", result.Name, result.Status)
 }
 
 func runService(configPath, checksPath string) {
@@ -168,8 +205,9 @@ func buildChecker(cfg config.CheckConfig) (checker.Checker, error) {
 
 func usage() {
 	fmt.Fprintf(os.Stderr, `Usage:
-  ops-worker <check-type> [args]      run a check and print result to stdout
-  ops-worker --service [flags]        run as background service
+  ops-worker <check-type> [args]       run a check and print result to stdout
+  ops-worker --send <check-type> [args] run a check once and send result to server
+  ops-worker --service [flags]         run as background service
 
 Check types:
   cpu                       CPU usage
@@ -179,9 +217,9 @@ Check types:
   docker <container>        docker container check
   external <command> [args] run external command as check
 
-Service mode flags:
+Send/Service mode flags:
   --config PATH   config file (default: /etc/ops-worker/config.yaml)
-  --checks PATH   checks file (overrides checks_file in config)
+  --checks PATH   checks file (overrides checks_file in config, service mode only)
 
 Other flags:
   --version   print version and exit
@@ -192,6 +230,8 @@ Examples:
   ops-worker process nginx
   ops-worker docker my-app
   ops-worker external /usr/local/bin/my-check.sh
+  ops-worker --send cpu
+  ops-worker --send --config /etc/ops-worker/config.yaml disk /var/log
   ops-worker --service --config /etc/ops-worker/config.yaml
 `)
 }
