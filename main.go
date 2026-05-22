@@ -170,6 +170,10 @@ func runService(configPath, checksPath string) {
 	sched.Start()
 	log.Printf("INFO: ops-worker %s started", version.Version)
 
+	log.Println("INFO: running initial check for all items...")
+	sched.RunAll(context.Background())
+	log.Println("INFO: initial checks completed")
+
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGTERM, syscall.SIGINT)
 	<-quit
