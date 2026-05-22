@@ -9,6 +9,7 @@ ops-worker is a lightweight machine state monitoring agent for Ubuntu, designed 
 - External command integration
 - Cron-based scheduling per check
 - Periodic healthcheck reporting
+- Initial check execution on startup
 - TLS support
 
 ## Installation
@@ -29,6 +30,50 @@ The script will:
 3. Install and start the systemd service
 
 Edit `/etc/ops-worker/config.yaml` and `/etc/ops-worker/checks.yaml` to match your environment.
+
+## Usage
+
+ops-worker has three modes:
+
+```
+ops-worker <check-type> [args]                  run a check and print result to stdout
+ops-worker --send <check-type> [args]           run a check once and send result to server
+ops-worker --service [flags]                    run as background service
+```
+
+### One-shot mode (no config required)
+
+Run a check and print the result as JSON to stdout:
+
+```bash
+ops-worker cpu
+ops-worker memory
+ops-worker disk /var/log
+ops-worker process nginx
+ops-worker docker my-app
+ops-worker external /usr/local/bin/my-check.sh
+```
+
+### Send mode
+
+Run a check once and send the result to the server (requires config file):
+
+```bash
+ops-worker --send cpu
+ops-worker --send --config /etc/ops-worker/config.yaml disk /var/log
+```
+
+### Service mode
+
+Run as a background service with cron-scheduled checks (requires config file):
+
+```bash
+ops-worker --service
+ops-worker --service --config /etc/ops-worker/config.yaml
+ops-worker --service --config /etc/ops-worker/config.yaml --checks /etc/ops-worker/checks.yaml
+```
+
+On startup, all checks run immediately once before the cron schedule takes over.
 
 ## Configuration
 
@@ -55,6 +100,12 @@ checks:
   - name: cpu
     type: cpu
     schedule: "*/1 * * * *"
+    options: {}
+
+  - name: memory
+    type: memory
+    schedule: "*/1 * * * *"
+    options: {}
 
   - name: disk-root
     type: disk
@@ -79,6 +130,7 @@ checks:
     schedule: "*/5 * * * *"
     options:
       command: "/usr/local/bin/check.sh"
+      args: []
       timeout: 10
 ```
 
@@ -109,9 +161,11 @@ The external command must output JSON to stdout:
 ## CLI flags
 
 ```
--config  path to config file (default: /etc/ops-worker/config.yaml)
--checks  path to checks file (overrides checks_file in config)
--version print version and exit
+--config PATH   path to config file (default: /etc/ops-worker/config.yaml)
+--checks PATH   path to checks file (service mode only, overrides checks_file in config)
+--send          run a check once and send result to server
+--service       run as background service
+--version       print version and exit
 ```
 
 ## Building
