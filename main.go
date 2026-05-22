@@ -170,8 +170,17 @@ func runService(configPath, checksPath string) {
 	sched.Start()
 	log.Printf("INFO: ops-worker %s started", version.Version)
 
+	ctx := context.Background()
+
+	log.Println("INFO: sending startup healthcheck...")
+	if err := hc.Send(ctx); err != nil {
+		log.Printf("WARN: failed to send startup healthcheck: %v", err)
+	} else {
+		log.Println("INFO: startup healthcheck sent")
+	}
+
 	log.Println("INFO: running initial check for all items...")
-	sched.RunAll(context.Background())
+	sched.RunAll(ctx)
 	log.Println("INFO: initial checks completed")
 
 	quit := make(chan os.Signal, 1)

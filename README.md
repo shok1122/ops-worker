@@ -15,13 +15,13 @@ ops-worker is a lightweight machine state monitoring agent for Ubuntu, designed 
 ## Installation
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/shok1122/ops-worker/<tag>/install.sh | sudo bash -s <tag>
+curl -fsSL https://raw.githubusercontent.com/shok1122/ops-worker/main/install.sh | sudo bash -s <tag>
 ```
 
 Example:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/shok1122/ops-worker/v1.0.0/install.sh | sudo bash -s v1.0.0
+curl -fsSL https://raw.githubusercontent.com/shok1122/ops-worker/main/install.sh | sudo bash -s v1.0.0
 ```
 
 The script will:
